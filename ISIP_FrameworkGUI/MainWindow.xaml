@@ -31,12 +31,20 @@
                 
              </MenuItem>
             <MenuItem Header="Filters">
-                             
+                <MenuItem Header="LPFiltering" Click="UnsharpMask_Click"/>
+                <MenuItem Header="HPFiltering" Click="CannyGray_Click"/>
             </MenuItem>
 
             <MenuItem Header="Pointwise Linear contrast">
                 <MenuItem Header="AffineOperator" Click="AffineOperator_Click"/>
             </MenuItem>
+
+            <MenuItem Header="Thresholding">
+                <MenuItem Header="Color HSV Binarization" Click="ColorHSVBinarization_Click" />
+                <MenuItem Header="Color3DBinarization" Click="Color3DBinarization_Click" />
+                <MenuItem Header="Color2DBinarization" Click="Color2DBinarization_Click" />
+            </MenuItem>
+ 
 
             <MenuItem Header="Save as original image" HorizontalAlignment="Right"
                       Click="saveAsOriginalMenuItem_Click"/>

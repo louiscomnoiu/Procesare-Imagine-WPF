@@ -23,14 +23,17 @@ using ISIP_FrameworkHelpers;
 using ISIP_Algorithms.PointwiseOperators;
 
 using Microsoft.VisualBasic;
+using ISIP_Algorithms.Thresholding;
+using ISIP_Algorithms.LPFiltering;
+using ISIP_Algorithms.HPFiltering;
 
 namespace ISIP_FrameworkGUI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    
-    
+
+
     public partial class MainWindow : Window
     {
         //private Windows.Grafica dialog;
@@ -45,7 +48,7 @@ namespace ISIP_FrameworkGUI
         {
             InitializeComponent();
             mainControl.OriginalImageCanvas.MouseDown += new MouseButtonEventHandler(OriginalImageCanvas_MouseDown);
-         }
+        }
 
         void OriginalImageCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -92,7 +95,7 @@ namespace ISIP_FrameworkGUI
             mainControl.LoadImageDialog(ImageType.Grayscale);
             Magnifyer_ON.IsEnabled = true;
             GL_ROW_ON.IsEnabled = true;
-           
+
         }
 
         private void openColorImageMenuItem_Click(object sender, RoutedEventArgs e)
@@ -116,7 +119,7 @@ namespace ISIP_FrameworkGUI
             {
                 mainControl.OriginalGrayscaleImage = mainControl.ProcessedGrayscaleImage;
             }
-            else if(mainControl.ProcessedColorImage != null)
+            else if (mainControl.ProcessedColorImage != null)
             {
                 mainControl.OriginalColorImage = mainControl.ProcessedColorImage;
             }
@@ -127,28 +130,11 @@ namespace ISIP_FrameworkGUI
             if (mainControl.OriginalGrayscaleImage != null)
             {
 
-                mainControl.ProcessedGrayscaleImage=Tools.Invert(mainControl.OriginalGrayscaleImage);
+                mainControl.ProcessedGrayscaleImage = Tools.Invert(mainControl.OriginalGrayscaleImage);
             }
 
         }
 
-        private void AffineOperator_Click(object sender, RoutedEventArgs e)
-        {
-            if (mainControl.OriginalGrayscaleImage != null)
-            {
-                string input1 = Interaction.InputBox("Introduce the value s1", "s1", "0",50,50);
-                string input2 = Interaction.InputBox("Introduce the value s2", "s2", "0", 50, 50);
-                string input3 = Interaction.InputBox("Introduce the value r1", "r1", "0", 50, 50);
-                string input4 = Interaction.InputBox("Introduce the value r2", "r2", "0", 50, 50);
-                int s1, s2, r1, r2;
-                int.TryParse(input1, out s1);
-                int.TryParse(input2, out s2);
-                int.TryParse(input3, out r1);
-                int.TryParse(input4, out r2);
-                mainControl.ProcessedGrayscaleImage = PointwiseOperators.AffineOperator(mainControl.OriginalGrayscaleImage, r1, s1, r2, s2);
-            }
-        }
-        // 10.5, 100, 20.0, 15.5
         private void Magnifyer_ON_Click(object sender, RoutedEventArgs e)
         {
             if (mainControl.OriginalGrayscaleImage != null)
@@ -173,6 +159,100 @@ namespace ISIP_FrameworkGUI
             }
 
         }
+        private void AffineOperator_Click(object sender, RoutedEventArgs e)
+        {
+            int r1 = 0, r2 = 0, s1 = 0, s2 = 0;
+            if (mainControl.OriginalGrayscaleImage != null)
+            {
+                UserInputDialog dlg = new UserInputDialog("Affine Operators", new string[] { "r1", "r2", "s1", "s2" }, 300, 250);
+                if (dlg.ShowDialog().Value == true)
+                {
+                    r1 = (int)dlg.Values[0];
+                    r2 = (int)dlg.Values[1];
+                    s1 = (int)dlg.Values[2];
+                    s2 = (int)dlg.Values[3];
+                }
+
+                mainControl.ProcessedGrayscaleImage = PointwiseOperators.AffineOperator(mainControl.OriginalGrayscaleImage, r1, s1, r2, s2);
+            }
+        }
+        private void ColorHSVBinarization_Click(object sender, RoutedEventArgs e)
+        {
+            if (mainControl.OriginalColorImage != null)
+            {
+                UserInputDialog userInputControl = new UserInputDialog("Threshold", new string[] { "T" }, 200, 150);
+                if (userInputControl.ShowDialog().Value == true)
+                {
+                    double T = (double)userInputControl.Values[0];
+                    mainControl.ProcessedGrayscaleImage = Thresholding.ColorHSVBinarization(mainControl.OriginalColorImage, lastClick, T);
+                }
+            }
+
+        }
+
+        private void Color2DBinarization_Click(object sender, RoutedEventArgs e)
+        {
+            if (mainControl.OriginalColorImage != null)
+            {
+                UserInputDialog userInputControl = new UserInputDialog("Threshold", new string[] { "T" }, 200, 150);
+                if (userInputControl.ShowDialog().Value == true)
+                {
+                    int T = (int)userInputControl.Values[0];
+                    mainControl.ProcessedGrayscaleImage = Thresholding.Color2DBinarization(mainControl.OriginalColorImage, T, lastClick);
+                }
+            }
+
+        }
+        private void Color3DBinarization_Click(object sender, RoutedEventArgs e)
+        {
+            if (mainControl.OriginalColorImage != null)
+            {
+                UserInputDialog dlg = new UserInputDialog("Threshold", new string[] { "T" }, 200, 150);
+                if (dlg.ShowDialog().Value == true)
+                {
+                    int T = (int)dlg.Values[0];
+                    mainControl.ProcessedGrayscaleImage = Thresholding.Color3DBinarization(mainControl.OriginalColorImage, T, lastClick);
+
+                }
+            }
+
+        }
+
+        private void UnsharpMask_Click(object sender, RoutedEventArgs e)
+        {
+            UserInputDialog dlg;
+            if (mainControl.OriginalGrayscaleImage != null)
+            {
+                dlg = new UserInputDialog("GaussFilter", new string[] { "Sigma: " });
+                if (dlg.ShowDialog().Value == true)
+                {
+                    double sigma = (int)dlg.Values[0];
+                    mainControl.ProcessedGrayscaleImage = LPFiltering.GaussFilter(mainControl.OriginalGrayscaleImage, sigma);
+                    mainControl.ProcessedGrayscaleImage = LPFiltering.UnsharpMask(mainControl.OriginalGrayscaleImage, mainControl.ProcessedGrayscaleImage);
+                }
+            }
+        }
+
+        private void CannyGray_Click(object sender, RoutedEventArgs e)
+        {
+            UserInputDialog dlg1, dlg2;
+            if (mainControl.OriginalGrayscaleImage != null)
+            {
+                dlg1 = new UserInputDialog("CannyGray", new string[] { "T1: " });
+                dlg2 = new UserInputDialog("CannyGray", new string[] { "T2: " });
+
+                if (dlg1.ShowDialog().Value == true && dlg2.ShowDialog().Value == true)
+                {
+                    double T1 = (double)dlg1.Values[0];
+                    double T2 = (double)dlg2.Values[0];
+
+                    mainControl.ProcessedGrayscaleImage = HPFiltering.CannyGray(mainControl.OriginalGrayscaleImage, 60, 80, 1);
+
+
+                }
+            }
+        }
+
 
         private void GL_ROW_ON_Click(object sender, RoutedEventArgs e)
         {
@@ -198,11 +278,11 @@ namespace ISIP_FrameworkGUI
             }
         }
 
-       
-       
-       
 
-        
-       
+
+
+
+
+
     }
 }
